@@ -1,0 +1,9 @@
+
+machine:
+  node:
+    version: 8
+
+test:
+  override:
+    - make verify
+    - make test
