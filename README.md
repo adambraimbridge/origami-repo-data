@@ -14,7 +14,6 @@ Get information about Origami repositories. See [the production service][product
   * [Requirements](#requirements)
   * [Running Locally](#running-locally)
   * [Configuration](#configuration)
-  * [Operational Documentation](#operational-documentation)
   * [Testing](#testing)
   * [Deployment](#deployment)
   * [Monitoring](#monitoring)
