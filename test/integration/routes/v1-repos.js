@@ -9,7 +9,10 @@ describe('GET /v1/repos', () => {
 
 	beforeEach(async () => {
 		await database.seed(app, 'basic');
-		request = agent.get('/v1/repos');
+		request = agent
+			.get('/v1/repos')
+			.set('X-Api-Key', 'mock-read-key')
+			.set('X-Api-Secret', 'mock-read-secret');
 	});
 
 	it('responds with a 200 status', () => {
@@ -44,6 +47,45 @@ describe('GET /v1/repos', () => {
 			assert.strictEqual(repo2.id, 'c990cb4b-c82b-5071-afb0-16149debc53d');
 			assert.strictEqual(repo2.name, 'o-mock-component');
 
+		});
+
+	});
+
+	describe('when no API credentials are provided', () => {
+		let request;
+
+		beforeEach(async () => {
+			await database.seed(app, 'basic');
+			request = agent.get('/v1/repos');
+		});
+
+		it('responds with a 401 status', () => {
+			return request.expect(401);
+		});
+
+		it('responds with HTML', () => {
+			return request.expect('Content-Type', /text\/html/);
+		});
+
+	});
+
+	describe('when the provided API key does not have the required permissions', () => {
+		let request;
+
+		beforeEach(async () => {
+			await database.seed(app, 'basic');
+			request = agent
+				.get('/v1/repos')
+				.set('X-Api-Key', 'mock-no-key')
+				.set('X-Api-Secret', 'mock-no-secret');
+		});
+
+		it('responds with a 403 status', () => {
+			return request.expect(403);
+		});
+
+		it('responds with HTML', () => {
+			return request.expect('Content-Type', /text\/html/);
 		});
 
 	});
