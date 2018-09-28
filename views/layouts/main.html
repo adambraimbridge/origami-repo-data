@@ -3,17 +3,16 @@
 <head>
 	<meta charset="utf-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-	<title>{{title}}</title>
+	<title>Origami Repo Data</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 	<script>
-		var cutsTheMustard = (
-			'querySelector' in document &&
-			'localStorage' in window &&
-			'addEventListener' in window
-		);
-		if (cutsTheMustard) {
-			document.documentElement.className = document.documentElement.className.replace(/\bcore\b/g, 'enhanced');
+		var script = document.createElement('script');
+		var supportsDeferredScripts = "defer" in script && "async" in script;
+		window.cutsTheMustard = (typeof document.documentElement.dataset === 'object' && ('visibilityState' in document) && supportsDeferredScripts);
+
+		if (window.cutsTheMustard) {
+			document.documentElement.classList.replace('core', 'enhanced');
 		}
 	</script>
 
@@ -30,42 +29,37 @@
 		}
 	</style>
 
-	<link rel="stylesheet" href="https://www.ft.com/__origami/service/build/v2/bundles/css?modules=o-techdocs@^7.0.5,o-grid@^4.0.0,o-icons@^4.2.0,o-header-services" />
+	<link rel="stylesheet" href="https://www.ft.com/__origami/service/build/v2/bundles/css?modules=o-layout@^2.0.1,o-syntax-highlight@^1.5.1,o-fonts@^3.0.4,o-message@^2.4.0&brand=internal" />
 	<link rel="stylesheet" href="/main.css" />
 	<script src="https://polyfill.io/v2/polyfill.min.js?features=fetch,default"></script>
 	<script>
 		(function(src) {
-			if (cutsTheMustard) {
-				var o = document.createElement('script');
-				o.async = o.defer = true;
-				o.src = src;
+			if (window.cutsTheMustard) {
+				script.async = script.defer = true;
+				script.src = src;
 				var s = document.getElementsByTagName('script')[0];
-				s.parentNode.insertBefore(o, s);
+				s.parentNode.insertBefore(script, s);
 			}
-		}('https://www.ft.com/__origami/service/build/v2/bundles/js?modules=o-techdocs@^7.0.5,o-grid@^4.0.0,o-icons@^4.2.0'));
+		}('https://www.ft.com/__origami/service/build/v2/bundles/js?modules=o-layout@^2.0.1,o-syntax-highlight@^1.5.1,o-message@^2.4.0'));
 	</script>
 
 </head>
-<body class="o-techdocs">
+<body data-o-component="o-syntax-highlight">
+	<div class="o-layout" data-o-component="o-layout">
 
-	<header class="o-header-services" data-o-component="o-header">
-		<div class="o-header-services__top o-header-services__container">
-			<div class="o-header-services__ftlogo"></div>
-			<div class="o-header-services__title">
-				<h1 class="o-header-services__product-name">
-					<a href="{{basePath}}">{{origami.options.name}}</a>
-				</h1>
-			</div>
+		{{> header}}
+
+		<div class="o-layout__sidebar">
+			<!-- automatically generated sidebar -->
 		</div>
-	</header>
 
-	{{{body}}}
-
-	<footer class="o-techdocs-footer">
-		<div class="o-techdocs-footer__inner">
-			<p>&copy; THE FINANCIAL TIMES LTD. FT and 'Financial Times' are trademarks of The Financial Times Ltd.</p>
+		<div class="o-layout__main">
+			{{{body}}}
 		</div>
-	</footer>
+
+		{{> footer}}
+
+	</div>
 
 </body>
 </html>
