@@ -12,6 +12,7 @@ function initModel(app) {
 		url: joi.string().uri({
 			scheme: 'https'
 		}).required(),
+		type: joi.string().valid('version', 'bundle'),
 		tag: joi.semver().valid().required(),
 		ingestion_attempts: joi.number().integer(),
 		ingestion_started_at: joi.date().allow(null)
@@ -53,6 +54,7 @@ function initModel(app) {
 					url: this.get('url'),
 					tag: this.get('tag'),
 				},
+				type: this.get('type'),
 				progress: {
 					isInProgress: this.get('is_in_progress'),
 					startTime: this.get('ingestion_started_at'),
@@ -75,9 +77,18 @@ function initModel(app) {
 						return reject(error);
 					}
 
-					// Ensure that ingestion is unique
-					if (this.hasChanged('url') || this.hasChanged('tag')) {
-						if (await Ingestion.alreadyExists(this.attributes.url, this.attributes.tag)) {
+					// Ensure that ingestion does not conflict with an existing
+					// ingestion or version.
+					if (this.hasChanged('url') || this.hasChanged('tag') || this.hasChanged('type')) {
+						const ingestionExists = await Ingestion.alreadyExists(this.attributes.url, this.attributes.tag, this.attributes.type);
+						let conflict = ingestionExists;
+
+						if (!conflict && this.attributes.type === 'version') {
+							const version = await app.model.Version.fetchOneByUrlAndTag(this.attributes.url, this.attributes.tag);
+							conflict = Boolean(version);
+						}
+
+						if (conflict) {
 							error = new Error('Validation failed');
 							error.isConflict = true;
 							error.name = 'ValidationError';
@@ -109,14 +120,10 @@ function initModel(app) {
 	// Model static methods
 	}, {
 
-		// Check whether an ingestion or version with the given
-		// URL and tag already exists
-		async alreadyExists(url, tag) {
-			const existingIngestion = await Ingestion.fetchOneByUrlAndTag(url, tag);
-			if (existingIngestion) {
-				return true;
-			}
-			return Boolean(await app.model.Version.fetchOneByUrlAndTag(url, tag));
+		// Check whether an ingestion already exists
+		async alreadyExists(url, tag, type) {
+			const existingIngestion = await Ingestion.fetchOneByUrlTagAndType(url, tag, type);
+			return Boolean(existingIngestion);
 		},
 
 		// Fetch all ingestions
@@ -134,11 +141,12 @@ function initModel(app) {
 		},
 
 		// Fetch an ingestion with a given url and tag
-		fetchOneByUrlAndTag(url, tag) {
+		fetchOneByUrlTagAndType(url, tag, type) {
 			return Ingestion.collection().query(qb => {
 				qb.select('*');
 				qb.where('url', url);
 				qb.where('tag', tag);
+				qb.where('type', type);
 			}).fetchOne();
 		},
 
@@ -195,8 +203,13 @@ function initModel(app) {
 				qb.select('*');
 				qb.where(app.database.knex.raw(`ingestion_started_at + (interval '${Ingestion.maximumRunTime}') <= now()`));
 			}).fetch();
-		}
+		},
 
+		// Create a new ingestion
+		async create(url, tag, type) {
+			const ingestion = await new Ingestion({ url, tag, type });
+			return ingestion;
+		}
 	});
 
 	// The maximum number of attempts to make on
