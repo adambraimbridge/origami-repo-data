@@ -22,7 +22,6 @@
   "main": "./lib/service.js",
   "scripts": {
     "start": "heroku-node-settings index.js",
-    "heroku-postbuild": "make auto-version",
     "snyk-protect": "snyk protect",
     "prepare": "npm run snyk-protect"
   },
